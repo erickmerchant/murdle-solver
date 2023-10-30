@@ -8,7 +8,7 @@ type Clue = {
 
 type Clues = Array<Clue>;
 
-const flags = parse(Deno.args, {
+let flags = parse(Deno.args, {
   string: ["dimension", "no", "yes"],
   collect: ["dimension", "no", "yes"],
   alias: {
@@ -18,15 +18,15 @@ const flags = parse(Deno.args, {
   },
 });
 
-const dimension: Array<Array<Dimension>> = flags.dimension.map((
+let dimension: Array<Array<Dimension>> = flags.dimension.map((
   a: Dimension,
 ): Array<Dimension> => a.split(","));
 
-const negatives: Clues = flags.no.map(mapClue);
+let negatives: Clues = flags.no.map(mapClue);
 
-const positives: Clues = flags.yes.map(mapClue);
+let positives: Clues = flags.yes.map(mapClue);
 
-const possibilities: Clues = dimension
+let possibilities: Clues = dimension
   .reduce(
     (
       res: Clues,
@@ -56,8 +56,8 @@ console.log(
   ),
 );
 
-for (const c of positives) {
-  const match = possibilities.find((p: Clue): boolean =>
+for (let c of positives) {
+  let match = possibilities.find((p: Clue): boolean =>
     countSharedDimensions(p, c) === Object.keys(c).length
   );
 
@@ -67,10 +67,10 @@ for (const c of positives) {
 }
 
 function mapClue(value: string): Clue {
-  const clue: Clue = {};
+  let clue: Clue = {};
 
   loop:
-  for (const v of value.split(",")) {
+  for (let v of value.split(",")) {
     for (let i = 0; i < dimension.length; i++) {
       if (dimension[i].includes(v)) {
         clue[i] = v;
@@ -90,9 +90,9 @@ function filterClues(
   has: boolean,
 ): (p: Clue) => boolean {
   return (p: Clue): boolean => {
-    for (const c of clues) {
-      const i = countSharedDimensions(p, c);
-      const len = Object.keys(c).length;
+    for (let c of clues) {
+      let i = countSharedDimensions(p, c);
+      let len = Object.keys(c).length;
 
       switch (has) {
         case false:
@@ -116,7 +116,7 @@ function filterClues(
 function countSharedDimensions(a: Clue, b: Clue) {
   let i = 0;
 
-  for (const k in a) {
+  for (let k in a) {
     if (b[k] === a[k]) {
       i += 1;
     }
