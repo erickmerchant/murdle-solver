@@ -1,12 +1,17 @@
 import { parse } from "https://deno.land/std@0.204.0/flags/mod.ts";
 
 type Dimension = string;
+type DimensionKey = string;
 
 type Clue = {
-	[key: string]: Dimension;
+	[key: DimensionKey]: Dimension;
 };
 
 type Clues = Array<Clue>;
+
+type ByDimension = {
+	[key: Dimension]: Clues;
+};
 
 let flags = parse(Deno.args, {
 	string: ["dimension", "no", "yes"],
@@ -18,7 +23,7 @@ let flags = parse(Deno.args, {
 	},
 });
 
-let dimension: Array<Array<Dimension>> = flags.dimension.map((
+let dimensions: Array<Array<Dimension>> = flags.dimension.map((
 	a: Dimension,
 ): Array<Dimension> => a.split(","));
 
@@ -26,7 +31,7 @@ let negatives: Clues = flags.no.map(mapClue);
 
 let positives: Clues = flags.yes.map(mapClue);
 
-let possibilities: Clues = dimension
+let possibilities: Clues = dimensions
 	.reduce(
 		(
 			res: Clues,
@@ -42,7 +47,9 @@ let possibilities: Clues = dimension
 			)
 				.flat(),
 		[],
-	)
+	);
+
+possibilities = possibilities
 	.filter(
 		filterClues(negatives, false),
 	)
@@ -50,11 +57,40 @@ let possibilities: Clues = dimension
 		filterClues(positives, true),
 	);
 
-console.log(
-	possibilities.map((p: Clue): string => Object.values(p).join(" ")).join(
-		"\n",
-	),
-);
+let sets: ByDimension = {};
+
+for (let p of possibilities) {
+	for (let d of Object.keys(p)) {
+		sets[p[d]] ??= [];
+
+		sets[p[d]].push(p);
+	}
+}
+
+let oneOffs: Set<Clue> = new Set();
+let repeats: Set<Clue> = new Set();
+
+for (let set of Object.values(sets)) {
+	if (set.length === 1) {
+		oneOffs.add(set[0]);
+
+		repeats.delete(set[0]);
+	} else {
+		for (let v of set) {
+			if (!oneOffs.has(v)) {
+				repeats.add(v);
+			}
+		}
+	}
+}
+
+for (let c of oneOffs) {
+	inform(Object.values(c).join(" "));
+}
+
+for (let c of repeats) {
+	log(Object.values(c).join(" "));
+}
 
 for (let c of positives) {
 	let match = possibilities.find((p: Clue): boolean =>
@@ -71,8 +107,8 @@ function mapClue(value: string): Clue {
 
 	loop:
 	for (let v of value.split(",")) {
-		for (let i = 0; i < dimension.length; i++) {
-			if (dimension[i].includes(v)) {
+		for (let i = 0; i < dimensions.length; i++) {
+			if (dimensions[i].includes(v)) {
 				clue[i] = v;
 
 				continue loop;
@@ -126,5 +162,13 @@ function countSharedDimensions(a: Clue, b: Clue) {
 }
 
 function warn(msg: string) {
-	console.warn(`%c${msg}`, "color: yellow");
+	console.warn(`%c${msg}`, "color: red");
+}
+
+function inform(msg: string) {
+	console.log(`%c${msg}`, "color: blue");
+}
+
+function log(msg: string) {
+	console.log(msg);
 }
