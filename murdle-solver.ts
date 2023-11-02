@@ -166,7 +166,7 @@ function warn(msg: string) {
 }
 
 function inform(msg: string) {
-	console.log(`%c${msg}`, "color: blue");
+	console.log(`%c${msg}`, "color: green");
 }
 
 function log(msg: string) {
